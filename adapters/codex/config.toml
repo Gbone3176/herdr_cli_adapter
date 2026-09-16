@@ -1,0 +1,16 @@
+# Merge these entries into the Codex config.toml [hooks] section.
+[[hooks]]
+event = "SessionStart"
+command = "bash ~/.herdr/adapters/codex/herdr-agent-state.sh session"
+
+[[hooks]]
+event = "UserPromptSubmit"
+command = "bash ~/.herdr/adapters/codex/herdr-agent-state.sh working"
+
+[[hooks]]
+event = "PreToolUse"
+command = "bash ~/.herdr/adapters/codex/herdr-agent-state.sh working"
+
+[[hooks]]
+event = "Stop"
+command = "bash ~/.herdr/adapters/codex/herdr-agent-state.sh idle"
