@@ -6,6 +6,7 @@ import os
 import socket
 import subprocess
 import sys
+import tempfile
 import time
 
 
@@ -28,6 +29,78 @@ def first_prompt(payload):
     return None
 
 
+def walk_values(value):
+    if isinstance(value, dict):
+        for key, child in value.items():
+            yield str(key).lower(), child
+            yield from walk_values(child)
+    elif isinstance(value, list):
+        for child in value:
+            yield from walk_values(child)
+
+
+def goal_signal(payload):
+    """Return (active, terminal) when a hook payload describes Codex Goal."""
+    if not isinstance(payload, (dict, list)):
+        return False, False
+    active = terminal = False
+    for key, value in walk_values(payload):
+        text = str(value).strip().lower() if isinstance(value, (str, int, float)) else ""
+        if key in {"tool", "tool_name", "name", "command", "event", "mode"}:
+            if "goal" in text or text in {"create_goal", "update_goal", "get_goal"}:
+                active = True
+        if key in {"status", "goal_status", "state"}:
+            if text in {"complete", "completed", "cancelled", "canceled", "failed"}:
+                terminal = True
+            elif text in {"active", "working", "pending", "in_progress", "in-progress"}:
+                active = True
+    prompt = first_prompt(payload)
+    if prompt:
+        lowered = prompt.lower()
+        if lowered.startswith("/goal") or "goal mode" in lowered:
+            active = True
+            if any(word in lowered for word in ("clear", "complete", "cancel", "stop")):
+                terminal = True
+    return active, terminal
+
+
+def goal_state_path(pane_id):
+    safe_pane = "".join(char if char.isalnum() or char in "._-" else "_" for char in pane_id)
+    return os.path.join(tempfile.gettempdir(), f"herdr-codex-goal-{safe_pane}.state")
+
+
+def goal_is_active(pane_id):
+    path = goal_state_path(pane_id)
+    try:
+        timestamp = float(open(path, encoding="utf-8").read().strip())
+    except (OSError, ValueError):
+        return False
+    if time.time() - timestamp > 86400:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+        return False
+    return True
+
+
+def set_goal_active(pane_id, active):
+    path = goal_state_path(pane_id)
+    if active:
+        try:
+            with open(path, "w", encoding="utf-8") as state:
+                state.write(str(time.time()))
+        except OSError:
+            pass
+    else:
+        try:
+            os.unlink(path)
+        except FileNotFoundError:
+            pass
+        except OSError:
+            pass
+
+
 def main():
     action = sys.argv[1] if len(sys.argv) > 1 else ""
     if action == "session_start":
@@ -41,9 +114,19 @@ def main():
     except Exception:
         payload = {}
     label = os.environ.get("HERDR_AGENT_LABEL", "generic")
+    pane_id = os.environ["HERDR_PANE_ID"]
+    goal_active, goal_terminal = goal_signal(payload)
+    if label == "codex":
+        if goal_terminal:
+            set_goal_active(pane_id, False)
+            action = "idle"
+        elif goal_active:
+            set_goal_active(pane_id, True)
+        elif action == "idle" and goal_is_active(pane_id):
+            action = "working"
     session_id = payload.get("session_id") if isinstance(payload, dict) else None
     params = {
-        "pane_id": os.environ["HERDR_PANE_ID"],
+        "pane_id": pane_id,
         "source": f"herdr:{label}",
         "agent": label,
         "seq": time.time_ns(),
@@ -64,7 +147,7 @@ def main():
         if title:
             subprocess.run(
                 [
-                    "herdr", "pane", "report-metadata", os.environ["HERDR_PANE_ID"],
+                    "herdr", "pane", "report-metadata", pane_id,
                     "--source", f"herdr:{label}", "--title", title,
                     "--token", f"task={title}",
                     "--token", f"model={os.environ.get('HERDR_AGENT_MODEL', '')}",

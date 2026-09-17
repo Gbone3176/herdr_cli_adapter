@@ -21,6 +21,13 @@ The example shows Codex and Kimi agents displayed together with `working`/`idle`
 - `codex`: Codex hook wrapper.
 - `generic`: a small reporter usable by other CLIs that can invoke shell hooks.
 
+### Codex Goal mode
+
+The Codex adapter recognizes goal tool payloads and `/goal` prompts. It keeps the
+Herdr state as `working` across intermediate `Stop` hooks while a goal is active,
+then returns to `idle` when a goal reports a terminal status. The marker is scoped
+to the Herdr pane and expires after 24 hours as a safety fallback.
+
 ## Events
 
 Adapters translate CLI events into:

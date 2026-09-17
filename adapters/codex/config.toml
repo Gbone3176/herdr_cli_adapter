@@ -12,5 +12,9 @@ event = "PreToolUse"
 command = "bash ~/.herdr/adapters/codex/herdr-agent-state.sh working"
 
 [[hooks]]
+event = "PostToolUse"
+command = "bash ~/.herdr/adapters/codex/herdr-agent-state.sh working"
+
+[[hooks]]
 event = "Stop"
 command = "bash ~/.herdr/adapters/codex/herdr-agent-state.sh idle"

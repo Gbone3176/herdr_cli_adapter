@@ -13,6 +13,12 @@
 - `codex`：Codex hook wrapper。
 - `generic`：可供其他支持 shell hook 的 CLI 使用的通用 reporter。
 
+### Codex GOAL 模式
+
+Codex 适配器会识别 GOAL 工具事件和 `/goal` 提示词。当目标仍在执行时，
+即使 Codex 触发中间的 `Stop` hook，Herdr 仍保持 `working`；目标报告终态后
+才恢复为 `idle`。状态标记按 Herdr window/pane 隔离，并在 24 小时后自动过期。
+
 ## Sidebar 示例
 
 适配器会向 Herdr 上报 CLI 的状态、模型和任务简称：
