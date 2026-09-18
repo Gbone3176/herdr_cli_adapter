@@ -1,0 +1,3 @@
+# Herdr sidebar rows for metadata emitted by CLI adapters.
+[ui.sidebar.agents]
+rows = [["state_icon", "workspace", "tab"], ["agent"], ["$task", "$model"]]

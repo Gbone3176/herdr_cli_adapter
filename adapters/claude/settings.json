@@ -1,8 +1,8 @@
 {
   "hooks": {
-    "SessionStart": [{"hooks": [{"type": "command", "command": "bash $HOME/.herdr/adapters/claude/herdr-agent-state.sh session"}]}],
-    "UserPromptSubmit": [{"hooks": [{"type": "command", "command": "bash $HOME/.herdr/adapters/claude/herdr-agent-state.sh working"}]}],
-    "PreToolUse": [{"hooks": [{"type": "command", "command": "bash $HOME/.herdr/adapters/claude/herdr-agent-state.sh working"}]}],
-    "Stop": [{"hooks": [{"type": "command", "command": "bash $HOME/.herdr/adapters/claude/herdr-agent-state.sh idle"}]}]
+    "SessionStart": [{"hooks": [{"type": "command", "command": "bash \"$HOME/.herdr/adapters/claude/herdr-agent-state.sh\" session"}]}],
+    "UserPromptSubmit": [{"hooks": [{"type": "command", "command": "bash \"$HOME/.herdr/adapters/claude/herdr-agent-state.sh\" working"}]}],
+    "PreToolUse": [{"hooks": [{"type": "command", "command": "bash \"$HOME/.herdr/adapters/claude/herdr-agent-state.sh\" working"}]}],
+    "Stop": [{"hooks": [{"type": "command", "command": "bash \"$HOME/.herdr/adapters/claude/herdr-agent-state.sh\" idle"}]}]
   }
 }

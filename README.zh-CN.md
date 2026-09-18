@@ -41,9 +41,24 @@ Codex 适配器会识别 GOAL 工具事件和 `/goal` 提示词。当目标仍�
 ./install.sh kimi
 ./install.sh claude
 ./install.sh codex
+./install.sh all
 ```
 
-安装器只复制 hook 并输出配置合并说明，不复制凭据，也不会在没有备份的情况下覆盖已有配置。
+安装器会复制 hook、自动合并对应 CLI 配置，并配置 Herdr sidebar 的
+`task`/`model` metadata 展示。重复执行是幂等的；已有配置和脚本在修改前
+会生成带时间戳的备份，不复制任何凭据。
+
+安装器支持以下路径环境变量，适配自定义或托管配置目录：
+
+- `CODEX_HOME`
+- `KIMI_CODE_HOME`
+- `CLAUDE_SHARED_SETTINGS_FILE`
+- `HERDR_ADAPTER_HOME`
+- `HERDR_CONFIG_PATH`
+
+Codex 使用新版 HooksToml 格式：`[[hooks.Event]]`、
+`[[hooks.Event.hooks]]`，并显式声明 `type = "command"`。安装器会把旧版仓库
+片段升级为新版结构，不再直接追加无效的 `[[hooks]] event = ...` 配置。
 
 Kimi Code 需要 `0.14.0` 或更高版本，Herdr 需要以 `HERDR_ENV=1` 运行。
 
@@ -55,6 +70,7 @@ Kimi Code 需要 `0.14.0` 或更高版本，Herdr 需要以 `HERDR_ENV=1` 运行
 
 ```bash
 ./tests/test_reporter.sh
+./tests/test_installer.sh
 ```
 
 项目仅依赖 POSIX shell 和 Python 3，不增加运行时依赖。

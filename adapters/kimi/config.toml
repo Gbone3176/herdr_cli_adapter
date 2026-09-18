@@ -1,24 +1,24 @@
-# Merge these entries into ~/.kimi-code/config.toml.
+# Merge these entries into $KIMI_CODE_HOME/config.toml.
 [[hooks]]
 event = "SessionStart"
-command = "bash '$HOME/.kimi-code/hooks/herdr-agent-state.sh' session"
+command = "bash \"$KIMI_CODE_HOME/hooks/herdr-agent-state.sh\" session"
 
 [[hooks]]
 event = "UserPromptSubmit"
-command = "bash '$HOME/.kimi-code/hooks/herdr-agent-state.sh' working"
+command = "bash \"$KIMI_CODE_HOME/hooks/herdr-agent-state.sh\" working"
 
 [[hooks]]
 event = "PreToolUse"
-command = "bash '$HOME/.kimi-code/hooks/herdr-agent-state.sh' working"
+command = "bash \"$KIMI_CODE_HOME/hooks/herdr-agent-state.sh\" working"
 
 [[hooks]]
 event = "PermissionRequest"
-command = "bash '$HOME/.kimi-code/hooks/herdr-agent-state.sh' blocked"
+command = "bash \"$KIMI_CODE_HOME/hooks/herdr-agent-state.sh\" blocked"
 
 [[hooks]]
 event = "Stop"
-command = "bash '$HOME/.kimi-code/hooks/herdr-agent-state.sh' idle"
+command = "bash \"$KIMI_CODE_HOME/hooks/herdr-agent-state.sh\" idle"
 
 [[hooks]]
 event = "Interrupt"
-command = "bash '$HOME/.kimi-code/hooks/herdr-agent-state.sh' idle"
+command = "bash \"$KIMI_CODE_HOME/hooks/herdr-agent-state.sh\" idle"

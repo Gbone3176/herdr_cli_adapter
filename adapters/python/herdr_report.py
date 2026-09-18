@@ -10,10 +10,14 @@ import tempfile
 import time
 
 
+MAX_TITLE_LENGTH = 120
+SOCKET_TIMEOUT_SECONDS = 0.5
+
+
 def send(method, params):
     request = json.dumps({"id": f"herdr:{params['agent']}:{time.time_ns()}", "method": method, "params": params})
     with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as client:
-        client.settimeout(0.5)
+        client.settimeout(SOCKET_TIMEOUT_SECONDS)
         client.connect(os.environ["HERDR_SOCKET_PATH"])
         client.sendall((request + "\n").encode())
         client.recv(4096)
@@ -25,8 +29,17 @@ def first_prompt(payload):
     for key in ("prompt", "user_prompt", "input", "text"):
         value = payload.get(key)
         if isinstance(value, str) and value.strip():
-            return value.strip().splitlines()[0][:120]
+            line = " ".join(value.strip().splitlines()[0].split())
+            return "".join(char for char in line if ord(char) >= 0x20 and char != "\x7f")[:MAX_TITLE_LENGTH]
     return None
+
+
+def model_name(payload):
+    if isinstance(payload, dict):
+        value = payload.get("model")
+        if isinstance(value, str) and value.strip():
+            return value.strip()[:MAX_TITLE_LENGTH]
+    return os.environ.get("HERDR_AGENT_MODEL", "").strip()[:MAX_TITLE_LENGTH]
 
 
 def walk_values(value):
@@ -50,7 +63,7 @@ def goal_signal(payload):
             if "goal" in text or text in {"create_goal", "update_goal", "get_goal"}:
                 active = True
         if key in {"status", "goal_status", "state"}:
-            if text in {"complete", "completed", "cancelled", "canceled", "failed"}:
+            if text in {"complete", "completed", "cancelled", "canceled", "failed", "blocked"}:
                 terminal = True
             elif text in {"active", "working", "pending", "in_progress", "in-progress"}:
                 active = True
@@ -66,7 +79,7 @@ def goal_signal(payload):
 
 def goal_state_path(pane_id):
     safe_pane = "".join(char if char.isalnum() or char in "._-" else "_" for char in pane_id)
-    return os.path.join(tempfile.gettempdir(), f"herdr-codex-goal-{safe_pane}.state")
+    return os.path.join(tempfile.gettempdir(), f"herdr-codex-goal-{safe_pane[:80]}.state")
 
 
 def goal_is_active(pane_id):
@@ -114,7 +127,9 @@ def main():
     except Exception:
         payload = {}
     label = os.environ.get("HERDR_AGENT_LABEL", "generic")
-    pane_id = os.environ["HERDR_PANE_ID"]
+    pane_id = os.environ.get("HERDR_PANE_ID")
+    if not pane_id:
+        return
     goal_active, goal_terminal = goal_signal(payload)
     if label == "codex":
         if goal_terminal:
@@ -144,16 +159,23 @@ def main():
     try:
         send(method, params)
         title = first_prompt(payload) if action == "working" else None
-        if title:
+        if title and os.environ.get("HERDR_METADATA", "1") != "0":
+            metadata = [
+                os.environ.get("HERDR_BIN", "herdr"), "pane", "report-metadata", pane_id,
+                "--source", f"herdr:{label}", "--title", title,
+                "--token", f"task={title}",
+            ]
+            model = model_name(payload)
+            if model:
+                metadata.extend(("--token", f"model={model}"))
             subprocess.run(
-                [
-                    "herdr", "pane", "report-metadata", pane_id,
-                    "--source", f"herdr:{label}", "--title", title,
-                    "--token", f"task={title}",
-                    "--token", f"model={os.environ.get('HERDR_AGENT_MODEL', '')}",
-                ], check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                metadata,
+                check=False,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=1,
             )
-    except OSError:
+    except (OSError, subprocess.TimeoutExpired):
         return
 
 

@@ -42,7 +42,26 @@ Metadata uses Herdr's `pane.report_metadata` surface with `task` and `model` tok
 ./install.sh kimi
 ```
 
-The installer copies the hook and prints the Kimi configuration entries to add. It never copies credentials and never overwrites an existing config without a backup.
+The installer copies the hook, merges the Kimi entries, and configures Herdr's
+sidebar metadata rows. Re-running it is idempotent. Existing configuration and
+installed scripts receive timestamped backups before they change.
+
+Install the other adapters the same way, or install all three:
+
+```bash
+./install.sh codex
+./install.sh claude
+./install.sh all
+```
+
+The installer honors `CODEX_HOME`, `KIMI_CODE_HOME`,
+`CLAUDE_SHARED_SETTINGS_FILE`, `HERDR_ADAPTER_HOME`, and `HERDR_CONFIG_PATH`,
+so it works with managed or relocated configuration directories.
+
+Codex uses the current HooksToml shape (`[[hooks.Event]]` plus
+`[[hooks.Event.hooks]]` and `type = "command"`); the installer upgrades the
+old repository fragment instead of appending an invalid legacy `[[hooks]]`
+entry.
 
 Kimi Code `0.14.0+` is required. Herdr must run with `HERDR_ENV=1`.
 
@@ -54,6 +73,8 @@ Hooks fail closed when Herdr variables are unavailable. Socket failures do not i
 
 ```bash
 ./tests/test_reporter.sh
+./tests/test_installer.sh
 ```
 
-The project is designed to work with POSIX shell and Python 3; it adds no runtime dependency.
+The project is designed to work with POSIX shell and Python 3; it adds no
+runtime dependency.

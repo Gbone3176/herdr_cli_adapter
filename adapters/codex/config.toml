@@ -1,20 +1,28 @@
-# Merge these entries into the Codex config.toml [hooks] section.
-[[hooks]]
-event = "SessionStart"
+# Codex 0.154+ HooksToml fragment.
+# `install.sh codex` merges this shape automatically into $CODEX_HOME/config.toml.
+[hooks]
+
+[[hooks.SessionStart]]
+[[hooks.SessionStart.hooks]]
+type = "command"
 command = "bash ~/.herdr/adapters/codex/herdr-agent-state.sh session"
 
-[[hooks]]
-event = "UserPromptSubmit"
+[[hooks.UserPromptSubmit]]
+[[hooks.UserPromptSubmit.hooks]]
+type = "command"
 command = "bash ~/.herdr/adapters/codex/herdr-agent-state.sh working"
 
-[[hooks]]
-event = "PreToolUse"
+[[hooks.PreToolUse]]
+[[hooks.PreToolUse.hooks]]
+type = "command"
 command = "bash ~/.herdr/adapters/codex/herdr-agent-state.sh working"
 
-[[hooks]]
-event = "PostToolUse"
+[[hooks.PostToolUse]]
+[[hooks.PostToolUse.hooks]]
+type = "command"
 command = "bash ~/.herdr/adapters/codex/herdr-agent-state.sh working"
 
-[[hooks]]
-event = "Stop"
+[[hooks.Stop]]
+[[hooks.Stop.hooks]]
+type = "command"
 command = "bash ~/.herdr/adapters/codex/herdr-agent-state.sh idle"
